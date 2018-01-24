@@ -52,21 +52,15 @@ float get_norm(float* a, float* b, int n) {
     return sqrt(norm);
 }
 
-void solve_jacobi() {
+void solve_jacobi(float** A, float*b, int n) {
     int n;
-    float** A;
-    float* x0, *x;
-    float* b;
 
-    // taking user input
-    cout << "Enter the number of equations/varialbles : " << endl;
-    cin >> n;
+    float* x0, *x;
+
 
     // dynamic memory allocations
-    b = new float[n];
     x0 = new float[n];
     x = new float[n];
-    A = new float*[n];
 
     for(int i=0; i<n; i++) 
         A[i] = new float[n];
@@ -141,9 +135,7 @@ void solve_jacobi() {
     // Job done, free unwanted memory
     delete[] x;
     delete[] x0;
-    delete[] b;
-    for(int i=0; i<n; i++)
-        delete[] A[i];
+ 
 
 }
 
