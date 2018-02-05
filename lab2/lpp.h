@@ -76,4 +76,14 @@ int get_rank(Matrix* m) {
     return rank;
 }
 
+// Solve a set of linear equations of form Ax = b using Gauss Elimination method.
+Matrix* solve_gauss_elimination(Matrix* A, Matrix* b) {
+
+}
+
+// SOlve set of linear equations of form Ax = b using Jacobi iteration
+Matrix* solve_jacobi_iteration(Matrix* A, Matrix* b) {
+
+}
+
 #endif
