@@ -77,11 +77,42 @@ int get_rank(Matrix* m) {
 }
 
 // Solve a set of linear equations of form Ax = b using Gauss Elimination method.
+// Assumptions: A = m*n mattrix, b = m*1 vector
+// (Assumes that the set of equations is solvable using this method)
+// (Returns NULL if any error occurs while solving)
 Matrix* solve_gauss_elimination(Matrix* A, Matrix* b) {
 
+    // Allocate memory for solution matrix
+    Matrix* x = allocate(1, A->ncols);
+
+    // Allocate memory and assign values to combined equation matrix [A | b]
+    Matrix* comb = allocate(A->nrows, A->ncols + 1);
+    int i,j;
+    for(i=0; i<A->nrows; i++) {
+        for(j=0; j<A->ncols; j++) {
+            comb->mat[i][j] = A->mat[i][j];
+        }
+    }
+    for(i=0; i<A->nrows; i++) {
+        comb->mat[i][A->ncols] = b->mat[i][0];
+    }
+
+
+    // Reduce combined matrix to row-echelon form
+    row_echelon_form(comb);
+
+    for(i=0; i<x->ncols; i++) {
+        x->mat[0][i] = comb->mat[i][comb->ncols-1];
+    }
+
+
+    free(comb);
+    return x;
+    
 }
 
-// SOlve set of linear equations of form Ax = b using Jacobi iteration
+// Solve set of linear equations of form Ax = b using Jacobi iteration
+// (Assumes that the set of equations is solvable using this method)
 Matrix* solve_jacobi_iteration(Matrix* A, Matrix* b) {
 
 }

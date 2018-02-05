@@ -4,17 +4,26 @@
 
 int main() {
     srand(time(NULL));
-    Matrix* a = allocate(5,3);
+    Matrix* a = allocate(3,3);
     int i, j;
 
-    for(i=0; i<a->nrows-3; i++)
+    for(i=0; i<a->nrows; i++)
         for(j=0; j<a->ncols; j++)
             a->mat[i][j] = (rand() % 1000)/10.0f;
-
+    
+    printf("\nMatrix A :\n");
     printm(a);
 
-    printf("\nRank of a = %d\n", get_rank(a));
 
+    Matrix* b = allocate(3, 1);
+    for(i=0; i<b->nrows; i++)
+        b->mat[i][0] = (rand() % 1000 / 10.0f);
+    printf("Matrix b\n");
+    printm(b);
+
+    solve_gauss_elimination(a, b);
+
+    free(b);
     free(a);
     return 0;
 }

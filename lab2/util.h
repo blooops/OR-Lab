@@ -24,6 +24,16 @@ void printm(Matrix* m) {
 
 }
 
+// definition of free for Matrix* object. Use freem instead of free for Matrix* objects
+void freem(Matrix* m) {
+    if(m != NULL) {
+        if(m->mat != NULL) {
+            free(m->mat);
+        }
+        free(m);
+    }
+}
+
 // Allocate memory for a matrix, initialize it with 0.0f and return pointer to it (NULL
 // in case of allocation error)
 Matrix* allocate(int nr, int nc) {
