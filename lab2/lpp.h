@@ -2,6 +2,8 @@
 #define LLP_H
 
 #include "util.h"
+#include <math.h>
+#define MAX_NO_STEPS 1000
 
 // Reduce the given matrix to row echelon form
 void row_echelon_form(Matrix* m) {
@@ -54,6 +56,10 @@ void row_echelon_form(Matrix* m) {
 int get_rank(Matrix* m) {
 
     Matrix* m_copy = copy_matrix(m);
+    if(m_copy == NULL || m_copy->mat == NULL) {
+        freem(m_copy);
+        return -1;
+    }
     row_echelon_form(m_copy);
  
     int rank = 0;
@@ -72,7 +78,7 @@ int get_rank(Matrix* m) {
             rank++;
     }
 
-    free(m_copy);
+    freem(m_copy);
     return rank;
 }
 
@@ -87,6 +93,12 @@ Matrix* solve_gauss_elimination(Matrix* A, Matrix* b) {
 
     // Allocate memory and assign values to combined equation matrix [A | b]
     Matrix* comb = allocate(A->nrows, A->ncols + 1);
+
+    if(x == NULL || x->mat==NULL || comb == NULL || comb->mat == NULL) {
+        freem(x);
+        freem(comb);
+        return NULL;
+    }
     int i,j;
     for(i=0; i<A->nrows; i++) {
         for(j=0; j<A->ncols; j++) {
@@ -106,15 +118,75 @@ Matrix* solve_gauss_elimination(Matrix* A, Matrix* b) {
     }
 
 
-    free(comb);
+    freem(comb);
     return x;
     
 }
 
+// Return the MSDiff between two vectors
+float SQR_DIFF(Matrix* x1, Matrix* x2) {
+
+    int i;
+    float value;
+    for(i=0; i<x1->ncols; i++) {
+        value += (x1->mat[0][i] - x2->mat[0][i]) * (x1->mat[0][i] - x2->mat[0][i]);
+    }
+    value = sqrt(value);
+    return value;
+}
+
 // Solve set of linear equations of form Ax = b using Jacobi iteration
 // (Assumes that the set of equations is solvable using this method)
-Matrix* solve_jacobi_iteration(Matrix* A, Matrix* b) {
+Matrix* solve_jacobi(Matrix* originalA, Matrix* originalb) {
 
+    Matrix* A = copy_matrix(originalA);
+    Matrix* b = copy_matrix(originalb);
+    Matrix* xi = allocate(1, A->ncols);
+    Matrix* xf = allocate(1, A->ncols);
+
+    if(A == NULL || b == NULL || xi == NULL || xf == NULL) {
+        freem(A);
+        freem(b);
+        freem(xi);
+        freem(xf);
+        return NULL;
+    }
+    int no_steps = 0;
+    // DEBUG
+
+    while(no_steps <= MAX_NO_STEPS) {
+        int i,j;
+        
+        for(i=0; i<A->ncols; i++) {
+            float sigma = 0.0f;
+            for(j=0; j<A->nrows; j++) {
+                if(i!=j)
+                    sigma += A->mat[i][j] * xi->mat[0][j];
+            }
+
+            xf->mat[0][i] = (b->mat[i][0] - sigma) / A->mat[i][i];
+
+        }
+
+        no_steps++;
+
+        printf("Iteration #%d\n", no_steps);
+        printm(xf);
+
+        if(SQR_DIFF(xf, xi) < 0.001f) 
+            break;
+
+        else {
+            for(i=0; i<A->ncols; i++) 
+                xi->mat[0][i] = xf->mat[0][i];
+        }
+
+    }
+
+    freem(A);
+    freem(b);
+    freem(xi);
+    return xf;
 }
 
 #endif

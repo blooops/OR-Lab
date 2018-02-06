@@ -28,6 +28,9 @@ void printm(Matrix* m) {
 void freem(Matrix* m) {
     if(m != NULL) {
         if(m->mat != NULL) {
+            int i;
+            for(i=0; i<m->nrows; i++)
+                free(m->mat[i]);
             free(m->mat);
         }
         free(m);
@@ -46,7 +49,7 @@ Matrix* allocate(int nr, int nc) {
 
    m->mat = (float**) malloc(sizeof(float*) * nr);
    if(m->mat == NULL) {
-       free(m);
+       freem(m);
        return NULL;
    }
 
@@ -56,7 +59,7 @@ Matrix* allocate(int nr, int nc) {
    }
 
    if(m->mat == NULL) {
-       free(m);
+       freem(m);
        return NULL;
    } 
    
