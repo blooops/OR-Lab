@@ -170,8 +170,8 @@ Matrix* solve_jacobi(Matrix* originalA, Matrix* originalb) {
 
         no_steps++;
 
-        printf("Iteration #%d\n", no_steps);
-        printm(xf);
+        //printf("Iteration #%d\n", no_steps);
+        //printm(xf);
 
         if(SQR_DIFF(xf, xi) < 0.001f) 
             break;
@@ -187,6 +187,74 @@ Matrix* solve_jacobi(Matrix* originalA, Matrix* originalb) {
     freem(b);
     freem(xi);
     return xf;
+}
+
+// Defining structures for simplex method:
+typedef struct simplex {
+    Matrix* Cj;
+    Matrix* BV;
+    Matrix* V;
+    Matrix* CBi;
+    Matrix* coeff;
+    Matrix* solutions;
+    Matrix* ratios;
+    Matrix* Zj;
+    Matrix* Delj;
+    int key_row;
+    int key_col;
+    float key_elem;
+} Simplex;
+
+// Function to allocate s Simplex* instance
+// Return NULL in case of errors
+Simplex* allocate_simplex(int nvars, int neqs ) {
+
+    Simplex* sim;
+    sim = (Simplex*) malloc(sizeof(Simplex));
+
+    if(sim == NULL)
+        return NULL;
+
+    sim->Cj = allocate(1, nvars);
+    sim->BV = allocate(neqs ,1);
+    sim->CBi = allocate(neqs, 1);
+    sim->V = allocate(1, nvars);
+    sim->coeff = allocate(neqs, nvars);
+    sim->solutions = allocate(neqs, 1);
+    sim->ratios = allocate(neqs, 1);
+    sim->Zj = allocate(1, nvars);
+    sim->Delj = allocate(1, nvars);
+    sim->key_row = -1;
+    sim->key_col = -1;
+    sim->key_elem = 0.0f;
+
+    if(sim->Cj == NULL || sim->BV == NULL || sim->V == NULL || sim->CBi == NULL || 
+            sim->coeff == NULL || sim->solutions == NULL || sim->ratios == NULL || 
+            sim->Zj == NULL || sim->Delj == NULL) {
+        freem(sim->Cj); 
+        freem(sim->BV);
+        freem(sim->V);
+        freem(sim->CBi);
+        freem(coeff);
+        freem(solutions);
+        freem(ratios);
+        freem(Zj);
+        freem(Delj);
+        free(sim);
+        return NULL;
+    }
+
+    return sim;
+
+}
+
+// Solve the optimization problem : maximize (cT * x) wrt constraint A * x = b
+// Assumes slack variables have been added and everything is in standard form
+// Returns NULL in case of any error
+Matrix* solve_simplex(Matrix* A, Matrix* b, Matrix* c) {
+
+    Simplex* sim = allocate_simplex(A->ncols, A->nrows);
+
 }
 
 #endif

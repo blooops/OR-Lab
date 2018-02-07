@@ -4,29 +4,26 @@
 
 int main() {
     srand(time(NULL));
-    Matrix* a = allocate(3,3);
+    Matrix* a = allocate(2,2);
     int i, j;
 
     // UI for inputting equation matrices to solve / check for solutions
 
-    for(i=0; i<a->nrows; i++)
-        for(j=0; j<a->ncols; j++)
-            a->mat[i][j] = (rand() % 1000)/10.0f;
-    
     printf("\nMatrix A :\n");
+    a->mat[0][0] = 2; a->mat[0][1] = 1;
+    a->mat[1][0] = 1; a->mat[1][1] = 2;
     printm(a);
 
-    Matrix* b = allocate(3, 1);
-    for(i=0; i<b->nrows; i++)
-        b->mat[i][0] = (rand() % 1000 / 10.0f);
+    Matrix* b = allocate(2, 1);
+    b->mat[0][0] = 3;
+    b->mat[1][0] = 1;
     printf("Matrix b\n");
     printm(b);
 
     //Matrix* x = solve_gauss_elimination(a, b);
     Matrix* xx = solve_jacobi(a, b);
 
-    //printf("Matrix x\n");
-   // printm(x);
+    printf("Matrix solutions \n");
     printf("\n");
     printm(xx);
 
