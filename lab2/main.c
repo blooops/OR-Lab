@@ -3,31 +3,43 @@
 #include "time.h"
 
 int main() {
-    srand(time(NULL));
-    Matrix* a = allocate(2,2);
-    int i, j;
+    int nvars, neqs;
+    printf("Enter nvars, neqs\n");
+    scanf("%d %d", &nvars, &neqs);
+    printf("No of vars = %d\nNo of eqs = %d\n", nvars, neqs);
+    printf("Input matrix A :\n");
+    int i,j;
+    Matrix* A = allocate(neqs, nvars);
+    Matrix* b = allocate(neqs, 1);
+    Matrix* c = allocate(1, nvars);
 
-    // UI for inputting equation matrices to solve / check for solutions
+    for(i=0; i<A->nrows; i++)
+        for(j=0; j<A->ncols; j++)
+            scanf("%f", &(A->mat[i][j]));
+    
+    printf("Input matrix b :\n");
+    for(i=0; i<b->nrows; i++)
+        scanf("%f", &(b->mat[i][0]));
 
-    printf("\nMatrix A :\n");
-    a->mat[0][0] = 2; a->mat[0][1] = 1;
-    a->mat[1][0] = 1; a->mat[1][1] = 2;
-    printm(a);
+    printf("Input matrix c :\n");
+    for(i=0; i<c->ncols; i++)
+        scanf("%f", &(c->mat[0][i]));
 
-    Matrix* b = allocate(2, 1);
-    b->mat[0][0] = 3;
-    b->mat[1][0] = 1;
-    printf("Matrix b\n");
-    printm(b);
-
-    //Matrix* x = solve_gauss_elimination(a, b);
-    Matrix* xx = solve_jacobi(a, b);
-
-    printf("Matrix solutions \n");
+    // Output whatever user entered:
     printf("\n");
-    printm(xx);
+    printf("You entered : \n");
+    printf("Matrix A = \n");
+    printm(A);
+    printf("Matrix b = \n");
+    printm(b);
+    printf("Matrix c = \n");
+    printm(c);
+
+    // Calling simplex method:
+    Matrix* solution = solve_simplex(A, b, c);
 
     free(b);
-    free(a);
+    free(A);
+    free(c);
     return 0;
 }

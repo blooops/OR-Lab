@@ -151,8 +151,7 @@ Matrix* solve_jacobi(Matrix* originalA, Matrix* originalb) {
         freem(xf);
         return NULL;
     }
-    int no_steps = 0;
-    // DEBUG
+    int no_steps = 0; // DEBUG
 
     while(no_steps <= MAX_NO_STEPS) {
         int i,j;
@@ -192,8 +191,7 @@ Matrix* solve_jacobi(Matrix* originalA, Matrix* originalb) {
 // Defining structures for simplex method:
 typedef struct simplex {
     Matrix* Cj;
-    Matrix* BV;
-    Matrix* V;
+    int* BV;
     Matrix* CBi;
     Matrix* coeff;
     Matrix* solutions;
@@ -216,9 +214,8 @@ Simplex* allocate_simplex(int nvars, int neqs ) {
         return NULL;
 
     sim->Cj = allocate(1, nvars);
-    sim->BV = allocate(neqs ,1);
+    sim->BV = (int*) malloc(neqs * sizeof(int));
     sim->CBi = allocate(neqs, 1);
-    sim->V = allocate(1, nvars);
     sim->coeff = allocate(neqs, nvars);
     sim->solutions = allocate(neqs, 1);
     sim->ratios = allocate(neqs, 1);
@@ -228,18 +225,17 @@ Simplex* allocate_simplex(int nvars, int neqs ) {
     sim->key_col = -1;
     sim->key_elem = 0.0f;
 
-    if(sim->Cj == NULL || sim->BV == NULL || sim->V == NULL || sim->CBi == NULL || 
+    if(sim->Cj == NULL || sim->BV == NULL || sim->CBi == NULL || 
             sim->coeff == NULL || sim->solutions == NULL || sim->ratios == NULL || 
             sim->Zj == NULL || sim->Delj == NULL) {
         freem(sim->Cj); 
-        freem(sim->BV);
-        freem(sim->V);
+        free(sim->BV);
         freem(sim->CBi);
-        freem(coeff);
-        freem(solutions);
-        freem(ratios);
-        freem(Zj);
-        freem(Delj);
+        freem(sim->coeff);
+        freem(sim->solutions);
+        freem(sim->ratios);
+        freem(sim->Zj);
+        freem(sim->Delj);
         free(sim);
         return NULL;
     }
@@ -254,7 +250,174 @@ Simplex* allocate_simplex(int nvars, int neqs ) {
 Matrix* solve_simplex(Matrix* A, Matrix* b, Matrix* c) {
 
     Simplex* sim = allocate_simplex(A->ncols, A->nrows);
+    if(sim == NULL)
+        return NULL;
 
+    // sim created, now initialize the simplex structure
+    int i,j;
+
+    printf("First Iteration Details:\n");
+    // Setting up Cjs
+
+    printf("sim->Cj\n");
+    for(i=0; i<sim->Cj->ncols; i++) {
+        sim->Cj->mat[0][i] = c->mat[0][i];
+    }
+    printm(sim->Cj);
+
+    // Setting up coeff
+    printf("sim->coeff\n");
+    for(i=0; i<sim->coeff->nrows; i++) {
+        for(j=0; j<sim->coeff->ncols; j++) {
+            sim->coeff->mat[i][j] = A->mat[i][j];
+        }
+    }
+    printm(sim->coeff);
+
+    // Setting up solutions
+    printf("sim->solutions\n");
+    for(i=0; i<sim->solutions->nrows;i++) {
+        sim->solutions->mat[i][0] = b->mat[i][0];
+    }
+    printm(sim->solutions);
+
+    // Setting up BV:
+    int nvars = A->ncols;
+    int neqs = A->nrows;
+    int offset=0;
+    printf("sim->BV\n");
+    for(i=nvars-neqs; i<nvars; i++) {
+        sim->BV[offset] = i;
+        offset++;
+    }
+    for(i=0; i<neqs; i++)
+        printf("%d\n ", sim->BV[i]);
+    printf("\n");
+
+    int nsteps = 0;
+
+    while(nsteps <=10) {
+
+        // Calculating CBi's based on the set BV
+        for(i=0; i<sim->CBi->nrows; i++) {
+            sim->CBi->mat[i][0] = sim->Cj->mat[0][sim->BV[i]] ;
+        }
+
+        // Calculating Zj's
+        for(i=0; i<sim->Zj->ncols; i++) {
+            for(j=0; j<sim->coeff->nrows; j++) {
+                sim->Zj->mat[0][i] += sim->coeff->mat[j][i] * 
+                sim->CBi->mat[j][0];
+            }
+        }
+
+        // Calculating Delj's
+        for(i=0; i<sim->Delj->ncols; i++) {
+            sim->Delj->mat[0][i] = sim->Cj->mat[0][i] -
+            sim->Zj->mat[0][i];
+            sim->Delj->mat[0][i] *= -1;
+        }
+
+
+        // Finding key column ( Maximum value of Delj)
+        float val = sim->Delj->mat[0][0];
+        sim->key_col = 0;
+        for(i=1; i<sim->Delj->ncols; i++) {
+            if(val < sim->Delj->mat[0][i]) {
+                sim->key_col = i;
+                val = sim->Delj->mat[0][i];
+            }
+        }
+        if(val > 0.0f)
+            break;
+
+        // Calculating sim->ratios:
+        for(i=0; i<sim->ratios->nrows; i++) {
+            if(sim->coeff->mat[i][sim->key_col] != 0.0f)
+            sim->ratios->mat[i][0] = sim->solutions->mat[i][0] / 
+            sim->coeff->mat[i][sim->key_col];
+
+            else 
+                sim->ratios->mat[i][0] = 100000000000000;
+        }
+
+        // Finding key_row (Minimize)
+        val = sim->ratios->mat[0][0];
+        sim->key_row = 0;
+        for(i=1; i<sim->ratios->nrows; i++) {
+            if(val > sim->ratios->mat[i][0]) {
+                sim->key_row = i;
+                val = sim->ratios->mat[i][0];
+            }
+        }
+
+
+        // Caching value of key element
+        sim->key_elem = sim->coeff->mat[sim->key_row][sim->key_col];
+
+        // Exchanging the new basic variable for the exiting one
+        sim->BV[sim->key_row] = sim->key_col;
+        
+        // Evaluating the new sim->coeff matrix and sim->solutions
+        for(i=0; i<sim->coeff->ncols; i++) {
+            sim->coeff->mat[sim->key_row][i] /= sim->key_elem;
+        }
+        sim->solutions->mat[sim->key_row][0] /= sim->key_elem;
+
+        for(i=0; i<sim->coeff->nrows; i++) {
+            if(i == sim->key_row)
+                continue;
+            sim->solutions->mat[i][0] -=
+            sim->solutions->mat[sim->key_row][0] *
+            sim->coeff->mat[i][sim->key_col];
+
+            for(j=0; j<sim->coeff->ncols; j++) {
+                sim->coeff->mat[i][j]  = sim->coeff->mat[i][j]
+                - ( sim->coeff->mat[sim->key_row][j] 
+                * sim->coeff->mat[i][sim->key_col]);
+            }
+
+        }
+
+        nsteps++;
+
+
+        printf("Calculated CBi = \n");
+        printm(sim->CBi);
+        printf("Calculated Zj = \n");
+        printm(sim->Zj);
+        printf("Calculated Delj = \n");
+        printm(sim->Delj);
+        printf("Found key column = %d\n", sim->key_col);
+        printf("Calculated sim->ratios =\n");
+        printm(sim->ratios);
+        printf("Found key row = %d\n", sim->key_row);
+        printf("Found key element's value = %8.3f\n", sim->key_elem);
+        printf("Next Iteration #%d\n", nsteps);
+        printf("Evaluated sim->coeff = \n");
+        printm(sim->coeff);
+        printf("Current sim->BV = \n");
+        for(i=0; i<neqs; i++)
+            printf("%d\n", sim->BV[i]);
+
+    }
+    return NULL;
 }
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
