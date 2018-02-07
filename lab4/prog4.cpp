@@ -64,11 +64,17 @@ void simplex_solve(Matrix<float>& A, Matrix<float>& b,
 
     int numIterations = 1;
 
-    while(false) {
+    while(true) {
+        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++";
         std::cout << std::endl << " ITERATION : " << numIterations
                   << std::endl;
+        std::cout << "++++++++++++++++++++++++++++++++++++++++++++++++"
+                  << std::endl;
+
+        
         
         numIterations++;
+        break;
     }
 }
 
