@@ -1,6 +1,6 @@
 #include "Utils.h"
 
-float** Simplex_standard(float** simplex, int m, int n, int flag) {
+float** Simplex_Standard(float** simplex, int m, int n, int flag) {
     /*
      * Assumes the following:
      *      Simplex initial table has been prepared
@@ -83,11 +83,63 @@ float** Simplex_Dual(float** simplex, int m, int n, int flag) {
 
 }
 
-float** Prepare_simplex_table() {
+float** Prepare_Simplex_Table() {
+
+    /*
+     * Assumes the following:
+     *      All variables are non negative (negative variables are to be
+     *      tackled by user at input)
+     *      number of variables does not account for slack variables
+     */
+
+    int i, j;
+    int m, n;
+    int type; int method;
+    printf("Enter type of problem (1 - MAXIZATION / 2 - MINIMIZATION): \n");
+    scanf("%d", &type);
+    printf("Enter the number of variables : \n");
+    scanf("%d", &n);
+    printf("Enter the number of constraints : \n");
+    scanf("%d", &m);
+
+    float** simplex = (float**) malloc((m + 2) * sizeof(float*));
+    for(i = 0; i <= m + 1; i++)
+        simplex[i] = (float*) malloc((n + m + 4) * sizeof(float));
+
+    // Inputting Objective Function details
+    printf("Enter the details of Objective Function now:\n");
+    printf("Enter the number of variables in OF :\n");
+    int t_a; scanf("%d", &t_a);
+    while(t_a--) {
+        printf("Enter a variable number of OF :\n");
+        int t_index; scanf("%d", &t_index);
+        printf("Enter the coefficient of above mentioned variable :\n");
+        scanf("%f", &simplex[0][t_index + COLOFF]);
+    }
+
+    // Inputting Constraints
+    printf("Now Enter the details about the constraints :\n");
+    t_a = 1;
+    while(t_a <= m) {
+        printf("Enter type of constraint (1 - > | 2 - <) :\n");
+        int t_type; scanf("%d", &t_type);
+        int t_i;
+        for(t_i = 1; t_i  <= n; t_i++) {
+            printf("Enter coefficient of variable %d :\n", t_i);
+            scanf("%f", &simplex[t_a + ROWOFF][t_i + COLOFF]);
+        }
+        printf("Enter RHS of this inequality :\n");
+        scanf("%f", &simplex[t_a + ROWOFF][t_i + COLOFF]);
+        t_a++;
+    }
+
+    // User Inputs done, now verify solvability: TODO
 
 }
 
 void Gauss_Eliminate(float** matrix, int nrows, int ncols, int prow, int pcol) {
+    // Function to perform Gauss Reduction (Row wise) to Simplex Tableau
+
     int i, j;
 
     for(j = 1; j <= ncols; j++)
@@ -105,6 +157,7 @@ void Gauss_Eliminate(float** matrix, int nrows, int ncols, int prow, int pcol) {
 }
 
 void Print_Tableau(float** simplex, int m, int n) {
+    // Function to print the Simplex Tableau passed
     int i, j;
     printf("\n");
     for(i = 0; i <= 1 + m; i++) {
@@ -114,4 +167,8 @@ void Print_Tableau(float** simplex, int m, int n) {
         printf("\n");
     }
     printf("\n");
+}
+
+int Validate_Algorithm(float** simplex, int m, int n, int algorithm) {
+
 }
