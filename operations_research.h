@@ -15,13 +15,37 @@
 #define CuttingPlaneTable           CuttingPlaneTableDataType**
 #define InequalityType              StandardDataType*
 #define ObjFuncType                 StandardDataType*
+#define Solution                    StandardDataType*
 
 // Definitions for the interface
-void inequality_add_to_list(InequalityType* list, int index);
-ObjFuncType objective_function_get();
-SimplexTable simplex_table_create();
-DualSimplexTable dual_simplex_table_create();
-TransportationTable transportation_table_create()
-CuttingPlaneTable cutting_plane_table_create();
+
+
+// Interface for creating objects
+Inequality inequality_create(int nvars);
+
+void inequality_add_to_list(InequalityType ineq, InequalityType* list, int index, 
+                            int nvars);
+
+ObjFuncType objective_function_get(int nvars);
+
+SimplexTable simplex_table_create(ObjFuncType objfunc, InequalityType* list, 
+                                  int neqs, int nvars);
+
+DualSimplexTable dual_simplex_table_create(ObjFuncType objfunc, 
+                                            InequalityType* list, int neqs, 
+                                            int nvars);
+
+TransportationTable transportation_table_create();
+
+CuttingPlaneTable cutting_plane_table_create(); 
+
+
+// Interface for algorithms
+
+void simplex_solve(SimplexTable table, int nvars, int neqs);
+
+void dual_simplex_solve(DualSimplexTable table, int nvars, int neqs);
+
+void transportation_solve(TransportationTable table, int nvars, int neqs);
 
 #endif
